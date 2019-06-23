@@ -128,8 +128,14 @@ processResources {
     }
 }
 
+/*
 mixin {
     add sourceSets.main, "mixins.phosphor.refmap.json"
+}*/
+
+tasks.withType(JavaCompile) {
+   options.encoding = "UTF-8"
+   options.annotationProcessorPath = configurations.compileOnly
 }
 
 publishing {
@@ -181,6 +187,10 @@ if (System.getenv("JARSIGN_SECRETS_FILE") != null) {
 
         jarTask.finalizedBy task
     }
+}
+
+wrapper {
+    distributionType = Wrapper.DistributionType.ALL
 }
 
 build.dependsOn deobfJar, sourcesJar
