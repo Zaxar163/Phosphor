@@ -1,10 +1,3 @@
-<a href="https://www.patreon.com/bePatron?u=824442"><img src="https://github.com/jellysquid3/Phosphor/raw/master/doc/patreon.png" width="200"></a>
-
-If Phosphor has made an improvement in performance for you, [please consider pledging to my Patreon!](https://patreon.com/jellysquid) Every pledge goes directly towards funding development and allows me
-to continue making Minecraft mods.
-
------
-
 ![Project icon](https://github.com/jellysquid3/Phosphor/raw/master/doc/logo.png)
 
 # Phosphor
