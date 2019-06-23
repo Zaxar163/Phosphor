@@ -9,7 +9,7 @@ import org.spongepowered.asm.mixin.Mixins;
 import java.util.Map;
 
 public class PhosphorFMLSetupHook implements IFMLCallHook {
-    private static final Logger logger = LogManager.getLogger("Phosphor Forge Core");
+    public static final Logger logger = LogManager.getLogger("Phosphor Forge Core");
 
     @Override
     public void injectData(Map<String, Object> data) {

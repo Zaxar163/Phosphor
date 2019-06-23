@@ -4,7 +4,7 @@ import me.jellysquid.mods.phosphor.api.IChunkLighting;
 import me.jellysquid.mods.phosphor.api.IChunkLightingData;
 import me.jellysquid.mods.phosphor.api.ILightingEngine;
 import me.jellysquid.mods.phosphor.api.ILightingEngineProvider;
-import me.jellysquid.mods.phosphor.mod.PhosphorMod;
+import me.jellysquid.mods.phosphor.core.PhosphorFMLSetupHook;
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.nbt.NBTTagList;
@@ -294,7 +294,7 @@ public class LightingHooks {
                     neighborLightChecks[i] = ((NBTTagShort) list.get(i)).getShort();
                 }
             } else {
-                PhosphorMod.LOGGER.warn("Chunk field {} had invalid length, ignoring it (chunk coordinates: {} {})", neighborLightChecksKey, chunk.x, chunk.z);
+            	PhosphorFMLSetupHook.logger.warn("Chunk field {} had invalid length, ignoring it (chunk coordinates: {} {})", neighborLightChecksKey, chunk.x, chunk.z);
             }
         }
     }

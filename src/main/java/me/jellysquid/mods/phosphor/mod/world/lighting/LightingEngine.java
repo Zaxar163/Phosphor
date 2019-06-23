@@ -2,8 +2,8 @@ package me.jellysquid.mods.phosphor.mod.world.lighting;
 
 import me.jellysquid.mods.phosphor.api.IChunkLighting;
 import me.jellysquid.mods.phosphor.api.ILightingEngine;
-import me.jellysquid.mods.phosphor.mixins.plugins.LightingEnginePlugin;
-import me.jellysquid.mods.phosphor.mod.PhosphorMod;
+import me.jellysquid.mods.phosphor.core.PhosphorFMLSetupHook;
+import me.jellysquid.mods.phosphor.mixins.plugins.OptimEnginePlugin;
 import me.jellysquid.mods.phosphor.mod.collections.PooledLongQueue;
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.profiler.Profiler;
@@ -197,7 +197,7 @@ public class LightingEngine implements ILightingEngine {
             // Validate that we're on the right thread immediately so we can gather information.
             // It is NEVER valid to call World methods from a thread other than the owning thread of the world instance.
             // Users can safely disable this warning, however it will not resolve the issue.
-            if (LightingEnginePlugin.ENABLE_ILLEGAL_THREAD_ACCESS_WARNINGS) {
+            if (OptimEnginePlugin.ENABLE_ILLEGAL_THREAD_ACCESS_WARNINGS) {
                 Thread current = Thread.currentThread();
 
                 if (current != this.ownedThread) {
@@ -205,7 +205,7 @@ public class LightingEngine implements ILightingEngine {
                                     " but was accessed from thread '%s' (ID: %s)",
                             this.ownedThread.getName(), this.ownedThread.getId(), current.getName(), current.getId()));
 
-                    PhosphorMod.LOGGER.warn(
+                    PhosphorFMLSetupHook.logger.warn(
                             "Something (likely another mod) has attempted to modify the world's state from the wrong thread!\n" +
                                     "This is *bad practice* and can cause severe issues in your game. Phosphor has done as best as it can to mitigate this violation," +
                                     " but it may negatively impact performance or introduce stalls.\nIn a future release, this violation may result in a hard crash instead" +
@@ -533,7 +533,7 @@ public class LightingEngine implements ILightingEngine {
         return (y << sY) | (x + (1 << lX - 1) << sX) | (z + (1 << lZ - 1) << sZ);
     }
 
-    private static int ITEMS_PROCESSED = 0, CHUNKS_FETCHED = 0;
+    //private static int ITEMS_PROCESSED = 0, CHUNKS_FETCHED = 0;
 
     /**
      * Polls a new item from <code>curQueue</code> and fills in state data members
@@ -558,10 +558,10 @@ public class LightingEngine implements ILightingEngine {
         if (this.curChunkIdentifier != chunkIdentifier) {
             this.curChunk = this.getChunk(this.curPos);
             this.curChunkIdentifier = chunkIdentifier;
-            CHUNKS_FETCHED++;
+            //CHUNKS_FETCHED++;
         }
 
-        ITEMS_PROCESSED++;
+        //ITEMS_PROCESSED++;
 
         return true;
     }

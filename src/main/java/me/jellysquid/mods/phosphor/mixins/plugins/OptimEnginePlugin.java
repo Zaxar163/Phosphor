@@ -12,7 +12,7 @@ import org.spongepowered.asm.mixin.extensibility.IMixinInfo;
 import java.util.List;
 import java.util.Set;
 
-public class LightingEnginePlugin implements IMixinConfigPlugin {
+public class OptimEnginePlugin implements IMixinConfigPlugin {
     private static final Logger logger = LogManager.getLogger("Phosphor Plugin");
 
     public static boolean ENABLE_ILLEGAL_THREAD_ACCESS_WARNINGS = false;
@@ -63,23 +63,37 @@ public class LightingEnginePlugin implements IMixinConfigPlugin {
             return false;
         }
 
+        String[] nameParts = mixinClassName.split("\\.");
+        if (!this.config.enableLightOptim && nameParts[nameParts.length-3].equals("lighting")) return false;
+        
         if (this.spongePresent) {
-            if (mixinClassName.endsWith("$Vanilla")) {
+            if (nameParts[nameParts.length-1].endsWith("$Vanilla")) {
                 logger.info("Disabled mixin '{}' as we are in a Sponge environment", mixinClassName);
                 return false;
             }
         } else {
-            if (mixinClassName.endsWith("$Sponge")) {
+            if (nameParts[nameParts.length-1].endsWith("$Sponge")) {
                 logger.info("Disabled mixin '{}' as we are in a basic Forge environment", mixinClassName);
                 return false;
             }
         }
 
-        // Do not apply client transformations if we are not in a client environment!
-        return !targetClassName.startsWith("net.minecraft.client") || MixinEnvironment.getCurrentEnvironment().getSide() == MixinEnvironment.Side.CLIENT;
+        return checkCurentEnv(nameParts[nameParts.length-2], mixinClassName);
     }
 
-    @Override
+    private boolean checkCurentEnv(String substring, String fullName) {
+    	if (substring.equals("server") && MixinEnvironment.getCurrentEnvironment().getSide() != MixinEnvironment.Side.SERVER) {
+    		logger.info("Disabled mixin '{}' as we are in client environment", fullName);
+    		return false;
+    	}
+    	if (substring.equals("client") && MixinEnvironment.getCurrentEnvironment().getSide() != MixinEnvironment.Side.CLIENT) {
+    		logger.info("Disabled mixin '{}' as we are in server environment", fullName);
+    		return false;
+    	}
+    	return true;
+	}
+
+	@Override
     public void acceptTargets(Set<String> myTargets, Set<String> otherTargets) {
 
     }

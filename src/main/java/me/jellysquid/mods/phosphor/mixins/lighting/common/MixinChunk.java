@@ -24,7 +24,6 @@ import org.spongepowered.asm.mixin.injection.Redirect;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
-@SuppressWarnings("UnnecessaryQualifiedMemberReference")
 @Mixin(value = Chunk.class)
 public abstract class MixinChunk implements IChunkLighting, IChunkLightingData, ILightingEngineProvider {
     private static final EnumFacing[] HORIZONTAL = EnumFacing.Plane.HORIZONTAL.facings();
