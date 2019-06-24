@@ -1,8 +1,8 @@
 {
   "required": true,
   "minVersion": "0.7.10",
-  "package": "me.jellysquid.mods.phosphor.mixins",
-  "plugin": "me.jellysquid.mods.phosphor.mixins.plugins.OptimEnginePlugin",
+  "package": "ru.zaxar163.phosphor.mixins",
+  "plugin": "ru.zaxar163.phosphor.mixins.plugins.OptimEnginePlugin",
   "compatibilityLevel": "JAVA_8",
   "mixins": [
     "lighting.client.MixinMinecraft",
