@@ -4,6 +4,7 @@ import java.security.cert.Certificate;
 import java.util.Arrays;
 import java.util.Map;
 
+import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.fml.common.DummyModContainer;
 import net.minecraftforge.fml.common.LoadController;
 import net.minecraftforge.fml.common.ModMetadata;
@@ -19,9 +20,9 @@ import com.google.common.eventbus.Subscribe;
 import javax.annotation.Nullable;
 
 
-public final class PhosphotContainer extends DummyModContainer
+public final class PhosphorContainer extends DummyModContainer
 {
-    public PhosphotContainer()
+    public PhosphorContainer()
     {
         super(new ModMetadata());
         ModMetadata meta = getMetadata();
@@ -55,6 +56,7 @@ public final class PhosphotContainer extends DummyModContainer
     @Subscribe
     public void modInitialization(FMLInitializationEvent evt)
     {
+    	MinecraftForge.EVENT_BUS.register(new PhosphorHooks());
     }
     @Subscribe
     public void modPostinitialization(FMLPostInitializationEvent evt)

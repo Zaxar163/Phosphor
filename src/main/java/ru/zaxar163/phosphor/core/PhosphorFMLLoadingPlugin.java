@@ -14,7 +14,7 @@ public class PhosphorFMLLoadingPlugin implements IFMLLoadingPlugin {
 
     @Override
     public String getModContainerClass() {
-        return "ru.zaxar163.phosphor.PhosphotContainer";
+        return "ru.zaxar163.phosphor.PhosphorContainer";
     }
 
     @Nullable
