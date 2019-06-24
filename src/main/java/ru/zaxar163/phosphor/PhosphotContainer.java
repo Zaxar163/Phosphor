@@ -3,10 +3,13 @@ package ru.zaxar163.phosphor;
 import java.security.cert.Certificate;
 import java.util.Arrays;
 import java.util.Map;
+
+import net.minecraft.network.EnumConnectionState;
 import net.minecraftforge.fml.common.DummyModContainer;
 import net.minecraftforge.fml.common.LoadController;
 import net.minecraftforge.fml.common.ModMetadata;
 import net.minecraftforge.fml.common.event.FMLConstructionEvent;
+import net.minecraftforge.fml.common.event.FMLPostInitializationEvent;
 import net.minecraftforge.fml.common.event.FMLPreInitializationEvent;
 import net.minecraftforge.fml.common.network.NetworkCheckHandler;
 import net.minecraftforge.fml.relauncher.Side;
@@ -49,7 +52,15 @@ public final class PhosphotContainer extends DummyModContainer
     public void modPreinitialization(FMLPreInitializationEvent evt)
     {
     }
-
+    @Subscribe
+    public void modPostinitialization(FMLPostInitializationEvent evt)
+    {
+    	try {
+			Class.forName(EnumConnectionState.class.getName());
+		} catch (ClassNotFoundException e) {
+			throw new RuntimeException(e);
+		}
+    }
     @NetworkCheckHandler
     public boolean checkModLists(Map<String,String> modList, Side side)
     {

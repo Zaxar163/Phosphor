@@ -1,4 +1,4 @@
-package ru.zaxar163.phosphor.mixins.fixes.common;
+package ru.zaxar163.phosphor;
 
 public interface IPatchedSPacketPong {
     long getClientTime();

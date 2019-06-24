@@ -15,7 +15,7 @@ import net.minecraft.util.text.TextComponentTranslation;
 import net.minecraft.util.text.event.ClickEvent;
 import net.minecraftforge.client.ForgeHooksClient;
 import net.minecraftforge.client.event.ScreenshotEvent;
-import ru.zaxar163.optim.Threader;
+import ru.zaxar163.phosphor.PhosphorData;
 
 import org.apache.logging.log4j.Logger;
 import org.spongepowered.asm.mixin.Final;
@@ -105,6 +105,6 @@ public abstract class MixinMinecraft implements IThreadListener, ISnooperInfo {
     private void onSpongeModInitClientThread(Minecraft minecraft) throws IllegalAccessException {
         instance = minecraft;
         final Thread thread = Thread.currentThread();
-        Threader.CLIENT.set(thread);
+        PhosphorData.CLIENT.set(thread);
     }
 }
