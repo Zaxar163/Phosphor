@@ -2,10 +2,8 @@ package ru.zaxar163.phosphor;
 
 import java.security.cert.Certificate;
 import java.util.Arrays;
-import java.util.Collections;
 import java.util.Map;
 
-import net.minecraft.client.audio.SoundManager;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.fml.common.DummyModContainer;
 import net.minecraftforge.fml.common.LoadController;

@@ -7,7 +7,6 @@ import java.util.TreeSet;
 import java.util.concurrent.BlockingDeque;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
-import java.util.concurrent.FutureTask;
 import java.util.concurrent.LinkedBlockingDeque;
 import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.ThreadPoolExecutor;
@@ -34,22 +33,9 @@ public class AsyncTick {
 	public Future<?> run(Runnable r) {
 		return threadPool.submit(r);
 	}
-	
-	public Future<?> runS(Runnable r) {
-		Future<?> ret = threadPool.submit(r);
-		queuer.add(ret);
-		return ret;
-	}
-	
-	public Future<?> forceRun(Runnable r) {
-		FutureTask<?> t = new FutureTask<>(r, null);
-		queue.addFirst(t);
-		return t;
-	}
 
 	public Future<?> forceRunS(Runnable r) {
-		FutureTask<?> t = new FutureTask<>(r, null);
-		queue.addFirst(t);
+		Future<?> t = threadPool.submit(r);
 		queuer.addFirst(t);
 		return t;
 	}
