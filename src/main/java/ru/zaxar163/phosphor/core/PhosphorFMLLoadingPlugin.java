@@ -1,7 +1,7 @@
 package ru.zaxar163.phosphor.core;
 
 import net.minecraftforge.fml.relauncher.IFMLLoadingPlugin;
-import ru.zaxar163.phosphor.PrivillegedBridge;
+import ru.zaxar163.phosphor.api.PrivillegedBridge;
 
 import javax.annotation.Nullable;
 import java.util.Map;

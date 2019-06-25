@@ -18,6 +18,8 @@ public class OptimEnginePlugin implements IMixinConfigPlugin {
 
     public static boolean ENABLE_ILLEGAL_THREAD_ACCESS_WARNINGS = false;
 
+    public static PhosphorConfig CFG = new PhosphorConfig();
+    
     private PhosphorConfig config;
 
     private boolean spongePresent;
@@ -27,10 +29,7 @@ public class OptimEnginePlugin implements IMixinConfigPlugin {
         logger.info("Loading configuration");
 
         this.config = PhosphorConfig.loadConfig();
-
-        if (!this.config.enablePhosphor) {
-            logger.info("Phosphor has been disabled through configuration!");
-        }
+        CFG = config;
 
         ENABLE_ILLEGAL_THREAD_ACCESS_WARNINGS = this.config.enableIllegalThreadAccessWarnings;
 
@@ -60,13 +59,9 @@ public class OptimEnginePlugin implements IMixinConfigPlugin {
 
     @Override
     public boolean shouldApplyMixin(String targetClassName, String mixinClassName) {
-        if (!this.config.enablePhosphor) {
-            return false;
-        }
-
         String[] nameParts = mixinClassName.split("\\.");
         if (!this.config.enableLightOptim && nameParts[nameParts.length-3].equals("lighting")) return false;
-        
+
         if (this.spongePresent) {
             if (nameParts[nameParts.length-1].endsWith("$Vanilla")) {
                 logger.info("Disabled mixin '{}' as we are in a Sponge environment", mixinClassName);

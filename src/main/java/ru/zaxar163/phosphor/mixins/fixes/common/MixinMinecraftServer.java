@@ -1,22 +1,23 @@
 package ru.zaxar163.phosphor.mixins.fixes.common;
 
+import net.minecraft.advancements.FunctionManager;
 import net.minecraft.crash.CrashReport;
+import net.minecraft.network.NetworkSystem;
 import net.minecraft.network.play.server.SPacketTimeUpdate;
+import net.minecraft.profiler.Profiler;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.management.PlayerList;
-import net.minecraft.server.management.PlayerProfileCache;
 import net.minecraft.util.ITickable;
 import net.minecraft.util.ReportedException;
 import net.minecraft.util.Util;
-import net.minecraft.util.datafix.DataFixer;
 import net.minecraft.world.MinecraftException;
 import net.minecraft.world.WorldServer;
 import ru.zaxar163.phosphor.PhosphorData;
+import ru.zaxar163.phosphor.api.AsyncTick;
 
-import java.io.File;
-import java.net.Proxy;
-import java.util.ArrayList;
 import java.util.List;
+import java.util.Queue;
+import java.util.concurrent.FutureTask;
 
 import org.apache.logging.log4j.Logger;
 import org.spongepowered.asm.mixin.Final;
@@ -28,23 +29,21 @@ import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.Redirect;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
-import com.mojang.authlib.GameProfileRepository;
-import com.mojang.authlib.minecraft.MinecraftSessionService;
-import com.mojang.authlib.yggdrasil.YggdrasilAuthenticationService;
 
 @Mixin(MinecraftServer.class)
-public abstract class MixinMinecraftServer extends MinecraftServer {
-	public MixinMinecraftServer(File anvilFileIn, Proxy proxyIn, DataFixer dataFixerIn,
-			YggdrasilAuthenticationService authServiceIn, MinecraftSessionService sessionServiceIn,
-			GameProfileRepository profileRepoIn, PlayerProfileCache profileCacheIn) {
-		super(anvilFileIn, proxyIn, dataFixerIn, authServiceIn, sessionServiceIn, profileRepoIn, profileCacheIn);
-	}
+public abstract class MixinMinecraftServer {
 
 	@Shadow @Final private static Logger LOGGER;
 	@Shadow public WorldServer[] worlds;
 	@Shadow private int tickCounter;
 	@Shadow private PlayerList playerList;
 	@Shadow private List<ITickable> tickables;
+	@Shadow private Profiler profiler;
+	@Shadow protected abstract boolean getAllowNether();
+	@Shadow @Final public Queue < FutureTask<? >> futureTaskQueue;
+	@Shadow public java.util.Hashtable<Integer, long[]> worldTickTimes;
+	@Shadow public abstract NetworkSystem getNetworkSystem();
+	@Shadow public abstract FunctionManager getFunctionManager();
     /**
      * @reason Disable initial world chunk load. This makes world load much faster, but in exchange
      * the player may see incomplete chunks (like when teleporting to a new area).
@@ -105,7 +104,6 @@ public abstract class MixinMinecraftServer extends MinecraftServer {
 
         this.profiler.endStartSection("levels");
         net.minecraftforge.common.chunkio.ChunkIOExecutor.tick();
-        List<Thread> threads = new ArrayList<>();
         Integer[] ids = net.minecraftforge.common.DimensionManager.getIDs(this.tickCounter % 200 == 0);
         for (int x = 0; x < ids.length; x++)
         {
@@ -114,7 +112,7 @@ public abstract class MixinMinecraftServer extends MinecraftServer {
 
             if (id == 0 || this.getAllowNether())
             {
-            	threads.add(new Thread(Thread.currentThread().getThreadGroup(), () -> {
+            	AsyncTick.INSTANCE.forceRunS(() -> {
                 WorldServer worldserver = net.minecraftforge.common.DimensionManager.getWorld(id);
                 this.profiler.func_194340_a(() ->
                 {
@@ -159,15 +157,11 @@ public abstract class MixinMinecraftServer extends MinecraftServer {
                 worldserver.getEntityTracker().tick();
                 this.profiler.endSection();
                 this.profiler.endSection();
-            	}, "World tick thread..."));
+            	});
             }
             worldTickTimes.get(id)[this.tickCounter % 100] = System.nanoTime() - i;
         }
-        threads.forEach(t -> {
-			try {
-				t.join();
-			} catch (InterruptedException ign) { }
-		});
+        AsyncTick.INSTANCE.finishTick();
         this.profiler.endStartSection("dim_unloading");
         net.minecraftforge.common.DimensionManager.unloadWorlds(worldTickTimes);
         this.profiler.endStartSection("connection");

@@ -1,4 +1,4 @@
-package ru.zaxar163.phosphor;
+package ru.zaxar163.phosphor.api;
 
 import java.lang.invoke.MethodHandle;
 import java.lang.invoke.MethodHandleProxies;

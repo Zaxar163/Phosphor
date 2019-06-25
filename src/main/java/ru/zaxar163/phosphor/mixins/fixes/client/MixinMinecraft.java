@@ -102,7 +102,7 @@ public abstract class MixinMinecraft implements IThreadListener, ISnooperInfo {
     @Shadow private static Minecraft instance;
 
     @Redirect(method = "<init>", at = @At(value = "FIELD", target = "Lnet/minecraft/client/Minecraft;instance:Lnet/minecraft/client/Minecraft;"))
-    private void onSpongeModInitClientThread(Minecraft minecraft) throws IllegalAccessException {
+    private void onClientInit(Minecraft minecraft) throws IllegalAccessException {
         instance = minecraft;
         final Thread thread = Thread.currentThread();
         PhosphorData.CLIENT.set(thread);

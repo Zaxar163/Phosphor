@@ -15,14 +15,17 @@ public class PhosphorConfig {
 	private static final File CONF_FILE = new File(CONF_DIR, "phosphor.json");
 	
     @SerializedName("enable_illegal_thread_access_warnings")
-    public boolean enableIllegalThreadAccessWarnings = true;
-
-    @SerializedName("enable_optim")
-    public boolean enablePhosphor = true;
+    public boolean enableIllegalThreadAccessWarnings = false;
     
     @SerializedName("enable_async_lighting")
     public boolean enableLightOptim = true;
 
+    @SerializedName("pool_threads_async")
+    public int poolThreads = 1;
+
+    @SerializedName("max_threads_async")
+    public int maxThreads = 4;
+    
     public static PhosphorConfig loadConfig() {
         if (!CONF_FILE.exists()) {
             PhosphorConfig config = new PhosphorConfig();

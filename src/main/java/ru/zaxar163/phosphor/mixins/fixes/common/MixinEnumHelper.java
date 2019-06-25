@@ -14,7 +14,7 @@ import org.spongepowered.asm.mixin.Shadow;
 
 import net.minecraftforge.common.util.EnumHelper;
 import net.minecraftforge.fml.common.FMLLog;
-import ru.zaxar163.phosphor.PrivillegedBridge;
+import ru.zaxar163.phosphor.api.PrivillegedBridge;
 
 @Mixin(EnumHelper.class)
 public class MixinEnumHelper {
