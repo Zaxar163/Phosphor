@@ -121,6 +121,20 @@ public final class PrivillegedBridge {
 		}
 	}
 	
+    public static Class<?> firstClass(final ClassLoader cl, final String... search) {
+		for (final String name : search)
+			try {
+				return Class.forName(name, false, cl);
+			} catch (final ClassNotFoundException ignored) {
+				// Expected
+			}
+		throw new RuntimeException(new ClassNotFoundException(Arrays.toString(search)));
+	}
+    
+    public static Class<?> firstClass(final String... search) {
+    	return firstClass(PrivillegedBridge.class.getClassLoader(), search);
+    }
+	
 	public static List<Field> digFields(final Class<?> top) {
 		final List<Field> ret = new ArrayList<>();
 		Class<?> superc = top;

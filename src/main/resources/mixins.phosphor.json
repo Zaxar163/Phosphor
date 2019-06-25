@@ -23,6 +23,7 @@
     "fixes.common.MixinSPacketPong",
     "fixes.common.MixinAnvilChunkLoader$Vanilla",
     "fixes.common.MixinNetHandlerPlayServer$Vanilla",
+    "fixes.common.MixinEnumHelper",
     "fixes.client.MixinMinecraft",
     "fixes.client.MixinNetHandlerPlayClient",
     "fixes.client.MixinEntityPlayerSP",

@@ -1,6 +1,7 @@
 package ru.zaxar163.phosphor.core;
 
 import net.minecraftforge.fml.relauncher.IFMLLoadingPlugin;
+import ru.zaxar163.phosphor.PrivillegedBridge;
 
 import javax.annotation.Nullable;
 import java.util.Map;
@@ -25,7 +26,11 @@ public class PhosphorFMLLoadingPlugin implements IFMLLoadingPlugin {
 
     @Override
     public void injectData(Map<String, Object> data) {
-
+    	try {
+			Class.forName(PrivillegedBridge.class.getName());
+		} catch (ClassNotFoundException e) {
+			throw new Error(e);
+		}
     }
 
     @Override
