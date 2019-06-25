@@ -21,6 +21,8 @@
     "fixes.common.MixinChunk",
     "fixes.common.MixinMinecraftServer",
     "fixes.common.MixinSPacketPong",
+    "fixes.common.MixinAnvilChunkLoader$Vanilla",
+    "fixes.common.MixinNetHandlerPlayServer$Vanilla",
     "fixes.common.MixinBlockRedstoneWire$1$Vanilla",
     "fixes.common.MixinBlockRedstoneWire$2$Vanilla",
     "fixes.client.MixinMinecraft",
