@@ -1,12 +1,10 @@
 package ru.zaxar163.phosphor.mixins.fixes.common;
 
 import java.lang.invoke.MethodHandle;
-import java.lang.invoke.MethodHandles;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
-import java.util.Arrays;
 
 import javax.annotation.Nullable;
 
@@ -31,7 +29,7 @@ public class MixinEnumHelper {
 	private static void setup0() throws Throwable {
 		Field modifiersField;
 		modifiersField = PrivillegedBridge.getField(Field.class, "modifiers");
-	    MODIFIERS_SETTER = MethodHandles.publicLookup().unreflectSetter(modifiersField);
+	    MODIFIERS_SETTER = PrivillegedBridge.ALL_LOOKUP.unreflectSetter(modifiersField);
 	}
 	
 	@Overwrite
