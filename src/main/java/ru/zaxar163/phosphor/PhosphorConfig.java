@@ -20,11 +20,23 @@ public class PhosphorConfig {
     @SerializedName("enable_async_lighting")
     public boolean enableLightOptim = true;
 
+    @SerializedName("enable_async_world")
+    public boolean enableAsync = true;
+
     @SerializedName("pool_threads_async")
     public int poolThreads = 1;
 
     @SerializedName("max_threads_async")
     public int maxThreads = 4;
+    
+    @SerializedName("players_async")
+    public boolean asyncPlayers = false;
+
+    @SerializedName("entity_async")
+	public boolean asyncEntity = false;
+
+    @SerializedName("tiles_async")
+	public boolean asyncTiles = true;
     
     public static PhosphorConfig loadConfig() {
         if (!CONF_FILE.exists()) {
