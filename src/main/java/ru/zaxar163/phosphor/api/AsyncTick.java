@@ -4,16 +4,13 @@ import java.lang.invoke.MethodHandle;
 import java.lang.invoke.MethodType;
 import java.util.NavigableMap;
 import java.util.TreeSet;
-import java.util.concurrent.BlockingDeque;
-import java.util.concurrent.ExecutionException;
-import java.util.concurrent.Future;
+import java.util.concurrent.ConcurrentSkipListMap;
 import java.util.concurrent.LinkedBlockingDeque;
 import java.util.concurrent.ThreadFactory;
-import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 
-import net.minecraftforge.fml.common.FMLCommonHandler;
 import ru.zaxar163.phosphor.PhosphorData;
+import ru.zaxar163.phosphor.api.BetterAsyncWorker.TRunnable;
 import ru.zaxar163.phosphor.mixins.plugins.OptimEnginePlugin;
 
 public class AsyncTick {
@@ -27,43 +24,31 @@ public class AsyncTick {
 			throw new Error(e);
 		}
 	}
-	private ThreadPoolExecutor threadPool;
-	private BlockingDeque<Runnable> queue;
-	private BlockingDeque<Future<?>> queuer;
-	public Future<?> run(Runnable r) {
-		return threadPool.submit(r);
-	}
+	private BetterAsyncWorker threadPool;
 
-	public Future<?> forceRunS(Runnable r) {
-		Future<?> t = threadPool.submit(r);
-		queuer.addFirst(t);
-		return t;
-	}
-
-	public void finishA() {
-		for (Future<?> f : queuer) {
-			try {
-				f.get();
-			} catch (InterruptedException e) {
-			} catch (ExecutionException e) {
-				throw new RuntimeException(e);
-			}
+    public static <T> TreeSet<T> newTreeSet() {
+		try {
+			return (TreeSet<T>) AsyncTick.treeSetConstructor.invoke(new ConcurrentSkipListMap<T, Object>());
+		} catch (Throwable e) {
+			throw new Error(e); // never happen
 		}
+    }
+
+    public void run(TRunnable r) {
+		threadPool.submit(r);
+	}
+	
+	public void forceRun(TRunnable r) {
+		threadPool.submitS(r);
 	}
 
 	public void finishTick() {
-		try {
-			threadPool.awaitTermination(20L, TimeUnit.MILLISECONDS);
-		} catch (InterruptedException e) { }
-		queuer.clear();
 	}
 	
 	private AsyncTick() {
-		FMLCommonHandler.instance().getEffectiveSide();
 		final ThreadGroup gr = PhosphorData.SERVER.get().getThreadGroup();
-		queue = new LinkedBlockingDeque<>();
-		queuer = new LinkedBlockingDeque<>();
-		threadPool = new ThreadPoolExecutor(OptimEnginePlugin.CFG.poolThreads, OptimEnginePlugin.CFG.maxThreads, 800, TimeUnit.MILLISECONDS, queue,
-				gr instanceof ThreadFactory ? (ThreadFactory)PhosphorData.SERVER.get().getThreadGroup() : e -> new Thread(gr, e, "Ticker"));
+		threadPool = new BetterAsyncWorker(new LinkedBlockingDeque<>(), gr instanceof ThreadFactory ? (ThreadFactory)gr : e -> new Thread(gr, e, "Ticker"),
+				OptimEnginePlugin.CFG.poolThreads,
+				OptimEnginePlugin.CFG.maxThreads, 800L, TimeUnit.MILLISECONDS, 10);
 	}
 }

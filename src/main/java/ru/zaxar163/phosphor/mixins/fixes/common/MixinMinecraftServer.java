@@ -9,7 +9,6 @@ import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.management.PlayerList;
 import net.minecraft.util.ITickable;
 import net.minecraft.util.ReportedException;
-import net.minecraft.util.Util;
 import net.minecraft.world.MinecraftException;
 import net.minecraft.world.WorldServer;
 import ru.zaxar163.phosphor.PhosphorData;
@@ -32,7 +31,7 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 @Mixin(MinecraftServer.class)
 public abstract class MixinMinecraftServer {
-
+	private static final Integer[] EMPTY_INT = new Integer[0];
 	@Shadow @Final private static Logger LOGGER;
 	@Shadow public WorldServer[] worlds;
 	@Shadow private int tickCounter;
@@ -89,21 +88,9 @@ public abstract class MixinMinecraftServer {
         }
     }
     
-    @Overwrite
-    public void updateTimeLightAndEntities()
+    @Redirect(method = "updateTimeLightAndEntities", at = @At(value = "INVOKE", target = "Lnet/minecraftforge/common/DimensionManager;getIDs(Z)[Ljava/lang/Integer;"))
+    public Integer[] updateTimeLightAndEntities(boolean unused)
     {
-        this.profiler.startSection("jobs");
-
-        synchronized (this.futureTaskQueue)
-        {
-            while (!this.futureTaskQueue.isEmpty())
-            {
-                Util.runTask(this.futureTaskQueue.poll(), LOGGER);
-            }
-        }
-
-        this.profiler.endStartSection("levels");
-        net.minecraftforge.common.chunkio.ChunkIOExecutor.tick();
         Integer[] ids = net.minecraftforge.common.DimensionManager.getIDs(this.tickCounter % 200 == 0);
         for (int x = 0; x < ids.length; x++)
         {
@@ -112,7 +99,6 @@ public abstract class MixinMinecraftServer {
 
             if (id == 0 || this.getAllowNether())
             {
-            	AsyncTick.INSTANCE.forceRunS(() -> {
                 WorldServer worldserver = net.minecraftforge.common.DimensionManager.getWorld(id);
                 this.profiler.func_194340_a(() ->
                 {
@@ -157,26 +143,10 @@ public abstract class MixinMinecraftServer {
                 worldserver.getEntityTracker().tick();
                 this.profiler.endSection();
                 this.profiler.endSection();
-            	});
             }
             worldTickTimes.get(id)[this.tickCounter % 100] = System.nanoTime() - i;
         }
         AsyncTick.INSTANCE.finishTick();
-        this.profiler.endStartSection("dim_unloading");
-        net.minecraftforge.common.DimensionManager.unloadWorlds(worldTickTimes);
-        this.profiler.endStartSection("connection");
-        this.getNetworkSystem().networkTick();
-        this.profiler.endStartSection("players");
-        this.playerList.onTick();
-        this.profiler.endStartSection("commandFunctions");
-        this.getFunctionManager().update();
-        this.profiler.endStartSection("tickables");
-
-        for (int k = 0; k < this.tickables.size(); ++k)
-        {
-            ((ITickable)this.tickables.get(k)).update();
-        }
-
-        this.profiler.endSection();
+        return EMPTY_INT;
     }
 }

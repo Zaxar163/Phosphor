@@ -9,11 +9,8 @@ import java.lang.reflect.AccessibleObject;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Locale;
-import java.util.Objects;
+import java.util.*;
+import java.util.concurrent.CopyOnWriteArrayList;
 
 public final class PrivillegedBridge {
 	private PrivillegedBridge() {}
@@ -253,5 +250,32 @@ public final class PrivillegedBridge {
 
 	public static <T> T wrap(final Class<T> iFace, final MethodHandle handle) {
 		return MethodHandleProxies.asInterfaceInstance(iFace, handle);
+	}
+
+	public static <T> List<T> arrayList() {
+		return new CopyOnWriteArrayList<T>() {
+
+			private static final long serialVersionUID = 1853425423L;
+
+			@Override
+			public Iterator<T> iterator() {
+				return new FCOWIterator<T>(super.toArray(), 0, this);
+			}
+
+			@Override
+			public ListIterator<T> listIterator() {
+				return new FCOWIterator<T>(super.toArray(), 0, this);
+			}
+
+			@Override
+			public ListIterator<T> listIterator(int index) {
+				Object[] elements = super.toArray();
+				int len = elements.length;
+				if (index < 0 || index > len)
+					throw new IndexOutOfBoundsException("Index: "+index);
+
+				return new FCOWIterator<T>(elements, index, this);
+			}
+		};
 	}
 }
