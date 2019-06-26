@@ -6,7 +6,6 @@ import net.minecraft.entity.Entity;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.entity.player.EntityPlayerMP;
 import net.minecraft.profiler.Profiler;
-import net.minecraft.server.MinecraftServer;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.ITickable;
 import net.minecraft.util.ReportedException;
@@ -31,20 +30,19 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
-import java.util.concurrent.atomic.AtomicInteger;
 
 @Mixin(World.class)
 public abstract class MixinWorld {
-	@Redirect(method = "updateEntities", at = @At(value = "INVOKE", target = "Ljava/util/List;size()I"),
+	@Redirect(method = "updateEntities", at = @At(value = "INVOKE", target = "Ljava/util/List;size()I", remap = false),
         slice = @Slice(from = @At(value="INVOKE",
                 target = "Lnet/minecraft/profiler/Profiler;endStartSection(Ljava/lang/String;)V"),
                 to = @At(value = "INVOKE", target = "Lnet/minecraft/entity/Entity;getRidingEntity()Lnet/minecraft/entity/Entity;"
         )))
     public int entityRedir(List<Entity> loadedEntityList) {
-    	for (AtomicInteger i1 = new AtomicInteger(0); i1.get() < loadedEntityList.size(); i1.incrementAndGet())
+    	for (Entity heh : loadedEntityList)
         {
     		AsyncTick.INSTANCE.run(() -> {
-            Entity entity2 = loadedEntityList.get(i1.get());
+            Entity entity2 = heh;
             Entity entity3 = entity2.getRidingEntity();
 
             if (entity3 != null)
@@ -95,7 +93,7 @@ public abstract class MixinWorld {
                     this.getChunk(l1, i2).removeEntity(entity2);
                 }
 
-                loadedEntityList.remove(i1.getAndDecrement());
+                loadedEntityList.remove(entity2);
                 this.onEntityRemoved(entity2);
             }
 
@@ -105,7 +103,7 @@ public abstract class MixinWorld {
         return 0;
     }
 
-	@Redirect(method = "updateEntities", at = @At(value = "INVOKE", target = "Ljava/util/List;size()I"),
+	@Redirect(method = "updateEntities", at = @At(value = "INVOKE", target = "Ljava/util/List;iterator()Ljava/util/Iterator;", remap = false),
 	        slice = @Slice(from = @At(value="INVOKE",
 	                target = "Lnet/minecraft/tileentity/TileEntity;onChunkUnload()V"),
 	                to = @At(value = "INVOKE",
