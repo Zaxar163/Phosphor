@@ -51,16 +51,16 @@ public abstract class MixinWorldServer extends World {
         super.tickPlayers();
         this.profiler.endStartSection("players");
 
-        for (int i = 0; i < this.playerEntities.size(); ++i)
+        for (Entity entity : this.playerEntities)
         {
-            Entity entity = this.playerEntities.get(i);
+        	AsyncTick.INSTANCE.forceRun(() -> {
             Entity entity1 = entity.getRidingEntity();
 
             if (entity1 != null)
             {
                 if (!entity1.isDead && entity1.isPassenger(entity))
                 {
-                    continue;
+                    return;
                 }
 
                 entity.dismountRidingEntity();
@@ -101,6 +101,7 @@ public abstract class MixinWorldServer extends World {
             }
 
             this.profiler.endSection();
+            });
         }
     }
 }
