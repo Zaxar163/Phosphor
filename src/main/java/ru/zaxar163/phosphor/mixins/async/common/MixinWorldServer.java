@@ -102,6 +102,6 @@ public abstract class MixinWorldServer extends World {
 
             this.profiler.endSection();
             });
-        }*/
-    }
+        }
+    }*/
 }
