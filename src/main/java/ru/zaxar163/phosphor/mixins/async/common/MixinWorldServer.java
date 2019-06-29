@@ -45,7 +45,7 @@ public abstract class MixinWorldServer extends World {
 		pendingTickListEntriesTreeSet = AsyncTick.newTreeSet();
 	}
 
-	@Overwrite
+	/* @Overwrite 
     protected void tickPlayers()
     {
         super.tickPlayers();
@@ -102,6 +102,6 @@ public abstract class MixinWorldServer extends World {
 
             this.profiler.endSection();
             });
-        }
+        }*/
     }
 }

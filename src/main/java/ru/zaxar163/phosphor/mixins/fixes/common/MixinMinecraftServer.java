@@ -13,6 +13,7 @@ import net.minecraft.world.MinecraftException;
 import net.minecraft.world.WorldServer;
 import ru.zaxar163.phosphor.PhosphorData;
 import ru.zaxar163.phosphor.api.AsyncTick;
+import ru.zaxar163.phosphor.core.PhosphorFMLSetupHook;
 
 import java.util.List;
 import java.util.Queue;
@@ -32,7 +33,7 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 @Mixin(MinecraftServer.class)
 public abstract class MixinMinecraftServer {
 	private static final Integer[] EMPTY_INT = new Integer[0];
-	@Shadow @Final private static Logger LOGGER;
+	//@Shadow @Final private static Logger LOGGER;
 	@Shadow public WorldServer[] worlds;
 	@Shadow private int tickCounter;
 	@Shadow private PlayerList playerList;
@@ -71,7 +72,7 @@ public abstract class MixinMinecraftServer {
             {
                 if (!isSilent)
                 {
-                    LOGGER.info("Saving chunks for level '{}'/{}", worldserver.getWorldInfo().getWorldName(), worldserver.provider.getDimensionType().getName());
+                	PhosphorFMLSetupHook.logger.info("Saving chunks for level '{}'/{}", worldserver.getWorldInfo().getWorldName(), worldserver.provider.getDimensionType().getName());
                 }
 
                 try
