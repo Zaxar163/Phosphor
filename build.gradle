@@ -35,7 +35,7 @@ minecraft {
     mappings = forge_mappings
 
     clientJvmArgs += "-Dfml.coreMods.load=ru.zaxar163.phosphor.core.PhosphorFMLLoadingPlugin"
-    serverJvmArgs += "-Dfml.coreMods.load=ru.zaxar163.mods.phosphor.core.PhosphorFMLLoadingPlugin"
+    serverJvmArgs += "-Dfml.coreMods.load=ru.zaxar163.phosphor.core.PhosphorFMLLoadingPlugin"
 
     makeObfSourceJar = false
 }
