@@ -2,7 +2,6 @@ buildscript {
     repositories {
         mavenLocal()
         jcenter()
-
         maven { url = 'https://repo.spongepowered.org/maven' }
         maven { url = 'http://files.minecraftforge.net/maven' }
     }
@@ -16,7 +15,7 @@ buildscript {
 apply plugin: 'net.minecraftforge.gradle.forge'
 apply plugin: 'org.spongepowered.mixin'
 
-group = "me.jellysquid.mods"
+group = "ru.zaxar163"
 
 if (System.getenv("BUILD_NUMBER") != null) {
     version = "${minecraft_version}-${mod_version}+build${System.getenv("BUILD_NUMBER")}"
@@ -54,6 +53,7 @@ dependencies {
     shade('org.spongepowered:mixin:0.7.11-SNAPSHOT') {
         transitive = false
     }
+    annotationProcessor 'org.spongepowered:mixin:0.7.11-SNAPSHOT'
 }
 
 def coreModManifest = {
@@ -61,13 +61,14 @@ def coreModManifest = {
     attributes "Maven-Artifact": "${group}:${name}:${version}"
     attributes "FMLCorePlugin": "ru.zaxar163.phosphor.core.PhosphorFMLLoadingPlugin"
     attributes "TweakClass": "org.spongepowered.asm.launch.MixinTweaker"
+    attributes "MixinConfigs": "mixins.phosphor.json"
     attributes "TweakOrder": 0
     attributes "FMLCorePluginContainsFMLMod": true
     attributes "ForceLoadAsMod": true
 }
 
 jar {
-    classifier = 'universal'
+    archiveClassifier = 'universal'
 
     manifest coreModManifest
 
@@ -90,7 +91,7 @@ jar {
 }
 
 task sourcesJar(type: Jar, dependsOn: classes) {
-    classifier = 'sources'
+    archiveClassifier = 'sources'
 
     manifest coreModManifest
 
@@ -98,7 +99,7 @@ task sourcesJar(type: Jar, dependsOn: classes) {
 }
 
 task deobfJar(type: Jar, dependsOn: reobfJar) {
-    classifier = 'dev'
+    archiveClassifier = 'dev'
 
     manifest coreModManifest
 
@@ -128,14 +129,18 @@ processResources {
     }
 }
 
-
 mixin {
-    add sourceSets.main, "mixins.phosphor.refmap.json"
+    defaultObfuscationEnv searge
+    //add sourceSets.main, "mixins.phosphor.refmap.json"
+}
+sourceSets {
+    main {
+        ext.refMap = "mixins.phosphor.refmap.json"
+    }
 }
 
 tasks.withType(JavaCompile) {
    options.encoding = "UTF-8"
-   options.annotationProcessorPath = configurations.compileOnly
 }
 
 wrapper {
