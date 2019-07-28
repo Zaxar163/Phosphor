@@ -20,9 +20,13 @@ import ru.zaxar163.phosphor.PhosphorData;
 import org.apache.logging.log4j.Logger;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
+import org.spongepowered.asm.mixin.Overwrite;
 import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Redirect;
+
+import com.mojang.authlib.GameProfile;
+import com.mojang.authlib.properties.PropertyMap;
 
 import javax.imageio.ImageIO;
 import java.awt.image.BufferedImage;
@@ -107,4 +111,17 @@ public abstract class MixinMinecraft implements IThreadListener, ISnooperInfo {
         final Thread thread = Thread.currentThread();
         PhosphorData.CLIENT.set(thread);
     }
+
+    @Overwrite
+    public PropertyMap getProfileProperties()
+    {
+    	try {
+    		instance.getProfileProperties();
+    	} catch (Throwable t) { // simple ignore only for stop flooding in dev env
+    	}
+        return profileProperties;
+    }
+    
+    @Shadow @Final
+    private PropertyMap profileProperties;
 }
