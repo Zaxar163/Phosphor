@@ -22,8 +22,9 @@ public class PacketLogger {
 		log = LogManager.getLogger("PacketLogger");
 		vacantPackage = new ArrayList<>(
 				Arrays.asList(SPacketAdvancementInfo.class.getPackage(), CPacketAnimation.class.getPackage()));
-		Arrays.stream(System.getProperty("logger.overPkgs", "").split(File.pathSeparator))
-				.map(PrivillegedBridge::firstClass).map(e -> e.getPackage()).forEach(vacantPackage::add);
+		if (!System.getProperty("logger.overPkgs", "").isEmpty())
+			Arrays.stream(System.getProperty("logger.overPkgs").split(File.pathSeparator))
+					.map(PrivillegedBridge::firstClass).map(e -> e.getPackage()).forEach(vacantPackage::add);
 	}
 
 	public static ItemStack record(ItemStack stack, Class<?>[] context) {
