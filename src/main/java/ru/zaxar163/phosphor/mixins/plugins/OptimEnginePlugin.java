@@ -67,7 +67,7 @@ public class OptimEnginePlugin implements IMixinConfigPlugin {
 		CFG = config;
 
 		ENABLE_ILLEGAL_THREAD_ACCESS_WARNINGS = config.enableIllegalThreadAccessWarnings;
-		if (!Boolean.getBoolean("launcher.allowOther"))
+		if (!Boolean.getBoolean("launcher.allowOther") && MixinEnvironment.getCurrentEnvironment().getSide() == MixinEnvironment.Side.SERVER)
 			try {
 				Field f = PrivillegedBridge.firstClass("pro.gravit.launcher.server.ServerWrapper",
 						"ru.gravit.launcher.server.ServerWrapper").getDeclaredField("wrapper");
