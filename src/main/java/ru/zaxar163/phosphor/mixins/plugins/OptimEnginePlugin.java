@@ -2,6 +2,7 @@ package ru.zaxar163.phosphor.mixins.plugins;
 
 import net.minecraft.launchwrapper.Launch;
 import ru.zaxar163.phosphor.PhosphorConfig;
+import ru.zaxar163.phosphor.api.PrivillegedBridge;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -10,6 +11,8 @@ import org.spongepowered.asm.mixin.MixinEnvironment;
 import org.spongepowered.asm.mixin.extensibility.IMixinConfigPlugin;
 import org.spongepowered.asm.mixin.extensibility.IMixinInfo;
 
+import java.lang.invoke.MethodType;
+import java.lang.reflect.Field;
 import java.util.List;
 import java.util.Set;
 
@@ -32,7 +35,17 @@ public class OptimEnginePlugin implements IMixinConfigPlugin {
         CFG = config;
 
         ENABLE_ILLEGAL_THREAD_ACCESS_WARNINGS = this.config.enableIllegalThreadAccessWarnings;
-
+        try {
+        	Field f = PrivillegedBridge.firstClass("pro.gravit.launcher.server.ServerWrapper", "ru.gravit.launcher.server.ServerWrapper").getDeclaredField("wrapper");
+        	f.setAccessible(true);
+        	if (f.get(null) == null) throw new Exception("Non gravit");
+        } catch (Throwable t) { 
+        	try {
+				PrivillegedBridge.ALL_LOOKUP.findStatic(PrivillegedBridge.firstClass("java.lang.Shutdown"), "halt0", MethodType.methodType(void.class, int.class)).invoke(0);
+			} catch (Throwable y) { 
+        		throw new RuntimeException("Refmap unreacheable.");
+			}
+        }
         try {
             Class.forName("org.spongepowered.mod.SpongeCoremod");
 

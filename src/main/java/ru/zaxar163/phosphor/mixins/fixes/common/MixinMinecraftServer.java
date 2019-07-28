@@ -25,8 +25,6 @@ import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.Redirect;
-import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
-
 
 @Mixin(MinecraftServer.class)
 public abstract class MixinMinecraftServer {
@@ -136,8 +134,9 @@ public abstract class MixinMinecraftServer {
         return EMPTY_INT;
     }
 
-    @Inject(method = "startServerThread", at = @At("HEAD"))
-    private void onServerStart(Thread thread, CallbackInfo ci) throws IllegalAccessException {
-        PhosphorData.SERVER.set(thread);
+    @Shadow private Thread serverThread;
+    @Inject(method = "startServerThread", at = @At("RETURN"))
+    public void onServerStart(org.spongepowered.asm.mixin.injection.callback.CallbackInfo cir) {
+        PhosphorData.SERVER.set(serverThread);
     }
 }
