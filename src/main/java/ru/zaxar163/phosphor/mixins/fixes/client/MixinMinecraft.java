@@ -1,5 +1,20 @@
 package ru.zaxar163.phosphor.mixins.fixes.client;
 
+import java.awt.image.BufferedImage;
+import java.io.File;
+
+import javax.imageio.ImageIO;
+
+import org.apache.logging.log4j.Logger;
+import org.spongepowered.asm.mixin.Final;
+import org.spongepowered.asm.mixin.Mixin;
+import org.spongepowered.asm.mixin.Overwrite;
+import org.spongepowered.asm.mixin.Shadow;
+import org.spongepowered.asm.mixin.injection.At;
+import org.spongepowered.asm.mixin.injection.Redirect;
+
+import com.mojang.authlib.properties.PropertyMap;
+
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiIngame;
 import net.minecraft.client.gui.GuiNewChat;
@@ -17,110 +32,112 @@ import net.minecraftforge.client.ForgeHooksClient;
 import net.minecraftforge.client.event.ScreenshotEvent;
 import ru.zaxar163.phosphor.PhosphorData;
 
-import org.apache.logging.log4j.Logger;
-import org.spongepowered.asm.mixin.Final;
-import org.spongepowered.asm.mixin.Mixin;
-import org.spongepowered.asm.mixin.Overwrite;
-import org.spongepowered.asm.mixin.Shadow;
-import org.spongepowered.asm.mixin.injection.At;
-import org.spongepowered.asm.mixin.injection.Redirect;
-
-import com.mojang.authlib.properties.PropertyMap;
-
-import javax.imageio.ImageIO;
-import java.awt.image.BufferedImage;
-import java.io.File;
-
 @Mixin(Minecraft.class)
 public abstract class MixinMinecraft implements IThreadListener, ISnooperInfo {
-    @Shadow @Final private static Logger LOGGER;
-    @Shadow @Final public Profiler profiler;
+	@Shadow
+	@Final
+	private static Logger LOGGER;
+	@Shadow
+	private static Minecraft instance;
 
-    @Shadow public GuiIngame ingameGUI;
+	@Shadow
+	@Final
+	public Profiler profiler;
 
-    /** @reason Fix GUI logic being included as part of "root.tick.textures" (https://bugs.mojang.com/browse/MC-129556) */
-    @Redirect(method = "runTick", at = @At(value = "INVOKE", target = "Lnet/minecraft/profiler/Profiler;endStartSection(Ljava/lang/String;)V", ordinal = 0))
-    private void endStartGUISection(Profiler profiler, String name) {
-        profiler.endStartSection("gui");
-    }
+	@Shadow
+	public GuiIngame ingameGUI;
 
-    /** @reason Part 2 of GUI logic fix. */
-    @Redirect(method = "runTick", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/renderer/texture/TextureManager;tick()V", ordinal = 0))
-    private void tickTextureManagerWithCorrectProfiler(TextureManager textureManager) {
-        profiler.endStartSection("textures");
-        textureManager.tick();
-        profiler.endStartSection("gui");
-    }
+	@Shadow
+	@Final
+	private PropertyMap profileProperties;
 
-    /** @reason Make saving screenshots async (https://bugs.mojang.com/browse/MC-33383) */
-    @Redirect(method = "dispatchKeypresses", at = @At(value = "INVOKE", target = "Lnet/minecraft/util/ScreenShotHelper;saveScreenshot(Ljava/io/File;IILnet/minecraft/client/shader/Framebuffer;)Lnet/minecraft/util/text/ITextComponent;", ordinal = 0))
-    private ITextComponent saveScreenshotAsync(File gameDirectory, int width, int height, Framebuffer buffer) {
-        try {
-            final BufferedImage screenshot = ScreenShotHelper.createScreenshot(width, height, buffer);
+	/**
+	 * @reason Fix GUI logic being included as part of "root.tick.textures"
+	 *         (https://bugs.mojang.com/browse/MC-129556)
+	 */
+	@Redirect(method = "runTick", at = @At(value = "INVOKE", target = "Lnet/minecraft/profiler/Profiler;endStartSection(Ljava/lang/String;)V", ordinal = 0))
+	private void endStartGUISection(Profiler profiler, String name) {
+		profiler.endStartSection("gui");
+	}
 
-            new Thread(() -> {
-                try {
-                    File screenshotDir = new File(gameDirectory, "screenshots");
-                    screenshotDir.mkdir();
-                    File screenshotFile = ScreenShotHelper.getTimestampedPNGFileForDirectory(screenshotDir).getCanonicalFile();
+	@Overwrite
+	public PropertyMap getProfileProperties() {
+		try {
+			instance.getProfileProperties();
+		} catch (Throwable t) { // simple ignore only for stop flooding in dev env
+		}
+		return profileProperties;
+	}
 
-                    // Forge event
-                    ScreenshotEvent event = ForgeHooksClient.onScreenshot(screenshot, screenshotFile);
-                    if (event.isCanceled()) {
-                        ingameGUI.getChatGUI().printChatMessage(event.getCancelMessage());
-                        return;
-                    } else {
-                        screenshotFile = event.getScreenshotFile();
-                    }
+	@Redirect(method = "<init>", at = @At(value = "FIELD", target = "Lnet/minecraft/client/Minecraft;instance:Lnet/minecraft/client/Minecraft;"))
+	private void onClientInit(Minecraft minecraft) throws IllegalAccessException {
+		instance = minecraft;
+		final Thread thread = Thread.currentThread();
+		PhosphorData.CLIENT.set(thread);
+	}
 
-                    ImageIO.write(screenshot, "png", screenshotFile);
+	/**
+	 * @reason Make saving screenshots async
+	 *         (https://bugs.mojang.com/browse/MC-33383)
+	 */
+	@Redirect(method = "dispatchKeypresses", at = @At(value = "INVOKE", target = "Lnet/minecraft/util/ScreenShotHelper;saveScreenshot(Ljava/io/File;IILnet/minecraft/client/shader/Framebuffer;)Lnet/minecraft/util/text/ITextComponent;", ordinal = 0))
+	private ITextComponent saveScreenshotAsync(File gameDirectory, int width, int height, Framebuffer buffer) {
+		try {
+			final BufferedImage screenshot = ScreenShotHelper.createScreenshot(width, height, buffer);
 
-                    // Forge event
-                    if (event.getResultMessage() != null) {
-                        ingameGUI.getChatGUI().printChatMessage(event.getResultMessage());
-                        return;
-                    }
+			new Thread(() -> {
+				try {
+					File screenshotDir = new File(gameDirectory, "screenshots");
+					screenshotDir.mkdir();
+					File screenshotFile = ScreenShotHelper.getTimestampedPNGFileForDirectory(screenshotDir)
+							.getCanonicalFile();
 
-                    ITextComponent screenshotLink = new TextComponentString(screenshotFile.getName());
-                    screenshotLink.getStyle().setClickEvent(new ClickEvent(ClickEvent.Action.OPEN_FILE, screenshotFile.getAbsolutePath()));
-                    screenshotLink.getStyle().setUnderlined(true);
-                    ingameGUI.getChatGUI().printChatMessage(new TextComponentTranslation("screenshot.success", screenshotLink));
-                } catch (Exception e) {
-                    LOGGER.warn("Couldn't save screenshot", e);
-                    ingameGUI.getChatGUI().printChatMessage(new TextComponentTranslation("screenshot.failure", e.getMessage()));
-                }
-            }, "Screenshot Saving Thread").start();
-        } catch (Exception e) {
-            LOGGER.warn("Couldn't save screenshot", e);
-            ingameGUI.getChatGUI().printChatMessage(new TextComponentTranslation("screenshot.failure", e.getMessage()));
-        }
+					// Forge event
+					ScreenshotEvent event = ForgeHooksClient.onScreenshot(screenshot, screenshotFile);
+					if (event.isCanceled()) {
+						ingameGUI.getChatGUI().printChatMessage(event.getCancelMessage());
+						return;
+					} else
+						screenshotFile = event.getScreenshotFile();
 
-        return null;
-    }
+					ImageIO.write(screenshot, "png", screenshotFile);
 
-    /** @reason Message is sent from screenshot method now. */
-    @Redirect(method = "dispatchKeypresses", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/GuiNewChat;printChatMessage(Lnet/minecraft/util/text/ITextComponent;)V", ordinal = 0))
-    private void sendScreenshotMessage(GuiNewChat guiNewChat, ITextComponent chatComponent) {}
+					// Forge event
+					if (event.getResultMessage() != null) {
+						ingameGUI.getChatGUI().printChatMessage(event.getResultMessage());
+						return;
+					}
 
-    @Shadow private static Minecraft instance;
+					ITextComponent screenshotLink = new TextComponentString(screenshotFile.getName());
+					screenshotLink.getStyle().setClickEvent(
+							new ClickEvent(ClickEvent.Action.OPEN_FILE, screenshotFile.getAbsolutePath()));
+					screenshotLink.getStyle().setUnderlined(true);
+					ingameGUI.getChatGUI()
+							.printChatMessage(new TextComponentTranslation("screenshot.success", screenshotLink));
+				} catch (Exception e) {
+					LOGGER.warn("Couldn't save screenshot", e);
+					ingameGUI.getChatGUI()
+							.printChatMessage(new TextComponentTranslation("screenshot.failure", e.getMessage()));
+				}
+			}, "Screenshot Saving Thread").start();
+		} catch (Exception e) {
+			LOGGER.warn("Couldn't save screenshot", e);
+			ingameGUI.getChatGUI().printChatMessage(new TextComponentTranslation("screenshot.failure", e.getMessage()));
+		}
 
-    @Redirect(method = "<init>", at = @At(value = "FIELD", target = "Lnet/minecraft/client/Minecraft;instance:Lnet/minecraft/client/Minecraft;"))
-    private void onClientInit(Minecraft minecraft) throws IllegalAccessException {
-        instance = minecraft;
-        final Thread thread = Thread.currentThread();
-        PhosphorData.CLIENT.set(thread);
-    }
+		return null;
+	}
 
-    @Overwrite
-    public PropertyMap getProfileProperties()
-    {
-    	try {
-    		instance.getProfileProperties();
-    	} catch (Throwable t) { // simple ignore only for stop flooding in dev env
-    	}
-        return profileProperties;
-    }
-    
-    @Shadow @Final
-    private PropertyMap profileProperties;
+	/** @reason Message is sent from screenshot method now. */
+	@Redirect(method = "dispatchKeypresses", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/GuiNewChat;printChatMessage(Lnet/minecraft/util/text/ITextComponent;)V", ordinal = 0))
+	private void sendScreenshotMessage(GuiNewChat guiNewChat, ITextComponent chatComponent) {
+	}
+
+	/** @reason Part 2 of GUI logic fix. */
+	@Redirect(method = "runTick", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/renderer/texture/TextureManager;tick()V", ordinal = 0))
+	private void tickTextureManagerWithCorrectProfiler(TextureManager textureManager) {
+		profiler.endStartSection("textures");
+		textureManager.tick();
+		profiler.endStartSection("gui");
+	}
 }

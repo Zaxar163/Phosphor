@@ -20,17 +20,23 @@ public class PacketLogger {
 
 	static {
 		log = LogManager.getLogger("PacketLogger");
-		vacantPackage = new ArrayList<>(Arrays.asList(SPacketAdvancementInfo.class.getPackage(), CPacketAnimation.class.getPackage()));
-		Arrays.stream(System.getProperty("logger.overPkgs", "").split(File.pathSeparator)).map(PrivillegedBridge::firstClass).map(e -> e.getPackage()).forEach(vacantPackage::add);
+		vacantPackage = new ArrayList<>(
+				Arrays.asList(SPacketAdvancementInfo.class.getPackage(), CPacketAnimation.class.getPackage()));
+		Arrays.stream(System.getProperty("logger.overPkgs", "").split(File.pathSeparator))
+				.map(PrivillegedBridge::firstClass).map(e -> e.getPackage()).forEach(vacantPackage::add);
 	}
 
 	public static ItemStack record(ItemStack stack, Class<?>[] context) {
 		int shift = 2;
-		if (context[shift] == ByteBufUtils.class) shift++;
+		if (context[shift] == ByteBufUtils.class)
+			shift++;
 		Class<?> caller = context[shift];
-		if (vacantPackage.contains(caller.getPackage())) return stack;
-		StringBuilder toLog = new StringBuilder("Tried to read itemstack from PacketBuffer it is bad practice for modders:\n");
-		toLog.append("\tItem: ").append(stack.getItem().getTranslationKey()).append(", damage: ").append(stack.getItemDamage()).append(", meta: ").append(stack.getMetadata()).append('\n');
+		if (vacantPackage.contains(caller.getPackage()))
+			return stack;
+		StringBuilder toLog = new StringBuilder(
+				"Tried to read itemstack from PacketBuffer it is bad practice for modders:\n");
+		toLog.append("\tItem: ").append(stack.getItem().getTranslationKey()).append(", damage: ")
+				.append(stack.getItemDamage()).append(", meta: ").append(stack.getMetadata()).append('\n');
 		toLog.append("\tStack:\n");
 		for (int i = shift; i < context.length && context[i] != NetworkManager.class; i++)
 			toLog.append("\t\t").append(context[i].getName()).append('\n');

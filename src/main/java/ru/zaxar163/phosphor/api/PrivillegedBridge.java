@@ -9,10 +9,13 @@ import java.lang.reflect.AccessibleObject;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
+import java.util.Locale;
+import java.util.Objects;
 
 public final class PrivillegedBridge {
-	private PrivillegedBridge() {}
 	private static final class ClassData {
 
 		private static final ClassValue<ClassData> VAL = new ClassValue<ClassData>() {
@@ -37,6 +40,55 @@ public final class PrivillegedBridge {
 		}
 	}
 
+	private static final class DataUtil {
+		private static Method a(final Method m) {
+			if (!m.isAccessible())
+				m.setAccessible(true);
+			return m;
+		}
+
+		public static Lookup newGet(final Field lookup) throws Throwable {
+			try {
+				final Class<?> unsafe = Class.forName("sun.misc.Unsafe");
+				final Field unsafeInst = Arrays.stream(unsafe.getDeclaredFields()).filter(
+						e -> e.getType().equals(unsafe) && e.getName().toLowerCase(Locale.US).contains("unsafe"))
+						.findFirst().get();
+				unsafeInst.setAccessible(true);
+				final Object inst = unsafeInst.get(null);
+				return (Lookup) a(unsafe.getDeclaredMethod("getObject", Object.class, long.class)).invoke(inst,
+						a(unsafe.getDeclaredMethod("staticFieldBase", Field.class)).invoke(inst, lookup),
+						(long) a(unsafe.getDeclaredMethod("staticFieldOffset", Field.class)).invoke(inst, lookup));
+			} catch (final Throwable e) {
+				try {
+					return oldGet(lookup);
+				} catch (final Throwable t) {
+					e.addSuppressed(t);
+					throw e;
+				}
+			}
+		}
+
+		public static Lookup oldGet(final Field lookup) throws Throwable {
+			AccessibleObject.setAccessible(new AccessibleObject[] { lookup }, true);
+			return (Lookup) MethodHandles.publicLookup().unreflectGetter(lookup).invoke();
+		}
+
+		private DataUtil() {
+		}
+	}
+
+	public static class TraceSecurityManager extends SecurityManager {
+		public static final TraceSecurityManager INSTANCE = new TraceSecurityManager();
+
+		private TraceSecurityManager() {
+		}
+
+		@Override
+		public Class<?>[] getClassContext() {
+			return super.getClassContext();
+		}
+	}
+
 	public static final Lookup ALL_LOOKUP;
 	public static final int ALL_MODES = Lookup.PUBLIC | Lookup.PRIVATE | Lookup.PROTECTED | Lookup.PACKAGE;
 	private static final MethodHandle CLASSLOADER_GETTER;
@@ -45,6 +97,7 @@ public final class PrivillegedBridge {
 	private static final MethodHandle FIELDS_GETTER;
 	public static final boolean JAVA9;
 	private static final MethodHandle LOOKUP_CONSTRUCTOR;
+
 	private static final MethodHandle METHODS_GETTER;
 
 	static {
@@ -82,55 +135,6 @@ public final class PrivillegedBridge {
 		}
 	}
 
-	private static final class DataUtil {
-		private DataUtil() { }
-		private static Method a(final Method m) {
-			if (!m.isAccessible())
-				m.setAccessible(true);
-			return m;
-		}
-
-		public static Lookup newGet(final Field lookup) throws Throwable {
-			try {
-				final Class<?> unsafe = Class.forName("sun.misc.Unsafe");
-				final Field unsafeInst = Arrays.stream(unsafe.getDeclaredFields())
-						.filter(e -> e.getType().equals(unsafe) && e.getName().toLowerCase(Locale.US).contains("unsafe"))
-						.findFirst().get();
-				unsafeInst.setAccessible(true);
-				final Object inst = unsafeInst.get(null);
-				return (Lookup) a(unsafe.getDeclaredMethod("getObject", Object.class, long.class)).invoke(inst,
-						a(unsafe.getDeclaredMethod("staticFieldBase", Field.class)).invoke(inst, lookup),
-						(long) a(unsafe.getDeclaredMethod("staticFieldOffset", Field.class)).invoke(inst, lookup));
-			} catch (final Throwable e) {
-				try {
-					return oldGet(lookup);
-				} catch (final Throwable t) {
-					e.addSuppressed(t);
-					throw e;
-				}
-			}
-		}
-
-		public static Lookup oldGet(final Field lookup) throws Throwable {
-			AccessibleObject.setAccessible(new AccessibleObject[] { lookup }, true);
-			return (Lookup) MethodHandles.publicLookup().unreflectGetter(lookup).invoke();
-		}
-	}
-	
-    public static Class<?> firstClass(final ClassLoader cl, final String... search) {
-		for (final String name : search)
-			try {
-				return Class.forName(name, false, cl);
-			} catch (final ClassNotFoundException ignored) {
-				// Expected
-			}
-		throw new RuntimeException(new ClassNotFoundException(Arrays.toString(search)));
-	}
-    
-    public static Class<?> firstClass(final String... search) {
-    	return firstClass(PrivillegedBridge.class.getClassLoader(), search);
-    }
-	
 	public static List<Field> digFields(final Class<?> top) {
 		final List<Field> ret = new ArrayList<>();
 		Class<?> superc = top;
@@ -151,6 +155,20 @@ public final class PrivillegedBridge {
 			superc = superc.getSuperclass();
 		}
 		return ret;
+	}
+
+	public static Class<?> firstClass(final ClassLoader cl, final String... search) {
+		for (final String name : search)
+			try {
+				return Class.forName(name, false, cl);
+			} catch (final ClassNotFoundException ignored) {
+				// Expected
+			}
+		throw new RuntimeException(new ClassNotFoundException(Arrays.toString(search)));
+	}
+
+	public static Class<?> firstClass(final String... search) {
+		return firstClass(PrivillegedBridge.class.getClassLoader(), search);
 	}
 
 	public static MethodHandle fromWrapped(final Object handle) {
@@ -250,12 +268,7 @@ public final class PrivillegedBridge {
 	public static <T> T wrap(final Class<T> iFace, final MethodHandle handle) {
 		return MethodHandleProxies.asInterfaceInstance(iFace, handle);
 	}
-	
-	public static class TraceSecurityManager extends SecurityManager {
-		public Class<?>[] getClassContext() {
-			return super.getClassContext();
-		}
-		private TraceSecurityManager() { }
-		public static final TraceSecurityManager INSTANCE = new TraceSecurityManager();
+
+	private PrivillegedBridge() {
 	}
 }

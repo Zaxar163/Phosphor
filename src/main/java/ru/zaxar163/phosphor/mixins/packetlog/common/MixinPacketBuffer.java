@@ -17,33 +17,35 @@ import ru.zaxar163.phosphor.api.PrivillegedBridge.TraceSecurityManager;
 
 @Mixin(PacketBuffer.class)
 public abstract class MixinPacketBuffer {
-	@Shadow @Final private ByteBuf buf;
+	@Shadow
+	@Final
+	private ByteBuf buf;
+
+	@Shadow
+	protected abstract byte readByte();
+
+	@Shadow
+	protected abstract NBTTagCompound readCompoundTag();
 
 	@Overwrite
-	public ItemStack readItemStack() throws IOException
-    {
-        int i = this.readShort();
+	public ItemStack readItemStack() throws IOException {
+		int i = readShort();
 
-        if (i < 0)
-        {
-            return ItemStack.EMPTY;
-        }
-        else
-        {
-            int j = this.readByte();
-            int k = this.readShort();
-            Item it = Item.getItemById(i);
-            if (it == null) {
-            	return ItemStack.EMPTY;  //antiNPE flood
-            }
-            ItemStack itemstack = new ItemStack(it, j, k);
-            itemstack.getItem().readNBTShareTag(itemstack, this.readCompoundTag());
-            PacketLogger.record(itemstack, TraceSecurityManager.INSTANCE.getClassContext());
-            return itemstack;
-        }
-    }
+		if (i < 0)
+			return ItemStack.EMPTY;
+		else {
+			int j = readByte();
+			int k = readShort();
+			Item it = Item.getItemById(i);
+			if (it == null)
+				return ItemStack.EMPTY; // antiNPE flood
+			ItemStack itemstack = new ItemStack(it, j, k);
+			itemstack.getItem().readNBTShareTag(itemstack, readCompoundTag());
+			PacketLogger.record(itemstack, TraceSecurityManager.INSTANCE.getClassContext());
+			return itemstack;
+		}
+	}
 
-	@Shadow protected abstract NBTTagCompound readCompoundTag();
-	@Shadow protected abstract byte readByte();
-	@Shadow protected abstract short readShort();
+	@Shadow
+	protected abstract short readShort();
 }
