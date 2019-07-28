@@ -12,7 +12,6 @@ import net.minecraft.util.ReportedException;
 import net.minecraft.world.MinecraftException;
 import net.minecraft.world.WorldServer;
 import ru.zaxar163.phosphor.PhosphorData;
-import ru.zaxar163.phosphor.api.AsyncTick;
 import ru.zaxar163.phosphor.core.PhosphorFMLSetupHook;
 
 import java.util.List;
@@ -146,7 +145,6 @@ public abstract class MixinMinecraftServer {
             }
             worldTickTimes.get(id)[this.tickCounter % 100] = System.nanoTime() - i;
         }
-        AsyncTick.INSTANCE.finishTick();
         return EMPTY_INT;
     }
 }

@@ -61,6 +61,7 @@ public class OptimEnginePlugin implements IMixinConfigPlugin {
     public boolean shouldApplyMixin(String targetClassName, String mixinClassName) {
         String[] nameParts = mixinClassName.split("\\.");
         if (!this.config.enableLightOptim && nameParts[nameParts.length-3].equals("lighting")) return false;
+        if (!this.config.enablePacketLoogger && nameParts[nameParts.length-3].equals("packetlog")) return false;
 
         if (this.spongePresent) {
             if (nameParts[nameParts.length-1].endsWith("$Vanilla")) {

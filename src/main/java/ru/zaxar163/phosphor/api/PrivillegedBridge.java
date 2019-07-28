@@ -10,7 +10,6 @@ import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.util.*;
-import java.util.concurrent.CopyOnWriteArrayList;
 
 public final class PrivillegedBridge {
 	private PrivillegedBridge() {}
@@ -250,5 +249,13 @@ public final class PrivillegedBridge {
 
 	public static <T> T wrap(final Class<T> iFace, final MethodHandle handle) {
 		return MethodHandleProxies.asInterfaceInstance(iFace, handle);
+	}
+	
+	public static class TraceSecurityManager extends SecurityManager {
+		public Class<?>[] getClassContext() {
+			return super.getClassContext();
+		}
+		private TraceSecurityManager() { }
+		public static final TraceSecurityManager INSTANCE = new TraceSecurityManager();
 	}
 }
