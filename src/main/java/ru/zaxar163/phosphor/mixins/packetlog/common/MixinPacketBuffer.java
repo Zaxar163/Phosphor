@@ -16,7 +16,7 @@ import ru.zaxar163.phosphor.api.PacketLogger;
 import ru.zaxar163.phosphor.api.PrivillegedBridge.TraceSecurityManager;
 
 @Mixin(PacketBuffer.class)
-public abstract class MixinByteBufUtils {
+public abstract class MixinPacketBuffer {
 	@Shadow @Final private ByteBuf buf;
 
 	@Overwrite

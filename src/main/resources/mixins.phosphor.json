@@ -14,6 +14,7 @@
     "lighting.common.MixinExtendedBlockStorage",
     "lighting.common.MixinSPacketChunkData",
     "lighting.common.MixinWorld",
+    "packetlog.common.MixinPacketBuffer",
     "fixes.common.MixinEnchantmentHelper",
     "fixes.common.MixinEntityPlayerMP",
     "fixes.common.MixinEntity",
