@@ -13,7 +13,9 @@ import net.minecraft.server.ServerEula;
 public class MixinServerEula {
 	@Inject(method = "loadEULAFile", at = @At("RETURN"), cancellable = true)
 	public void loadEULAFileHook(final File unused, final CallbackInfoReturnable<Boolean> cir) {
-		cir.setReturnValue(true);
-		cir.cancel();
+		if (Boolean.getBoolean("minecraft.eula.accepted")) {
+			cir.setReturnValue(true);
+			cir.cancel();
+		}
 	}
 }
