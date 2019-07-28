@@ -25,7 +25,7 @@ public class PacketLogger {
 		if (vacantPackage.contains(caller.getPackage())) return stack;
 		StringBuilder toLog = new StringBuilder("Tried to read itemstack from BB it is bad practice for modders:\n");
 		for (int i = 2; i < context.length; i++) toLog.append(context[i]).append('\n');
-		FMLLog.log.debug(toLog);
+		FMLLog.log.warn(toLog);
 		return stack;
 	}
 }
