@@ -49,18 +49,6 @@ public abstract class MixinMinecraftServer {
     @Overwrite
     public void initialWorldChunkLoad() {}
 
-    @Redirect(method = "startServerThread", at = @At(value = "INVOKE", target = "Ljava/lang/Thread;start()V", remap = false))
-    private void onServerStart(Thread thread) throws IllegalAccessException {
-        PhosphorData.SERVER.set(thread);
-        thread.start();
-
-    }
-
-    @Inject(method = "run", at = @At(value = "INVOKE", target = "Lnet/minecraft/server/MinecraftServer;systemExitNow()V"))
-    private void onServerStop(CallbackInfo ci) throws IllegalAccessException {
-    	PhosphorData.SERVER.set(null);
-    }
-
     @Overwrite
     public void saveAllWorlds(boolean isSilent)
     {
