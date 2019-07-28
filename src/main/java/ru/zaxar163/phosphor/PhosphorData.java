@@ -6,5 +6,6 @@ import net.minecraft.util.IProgressUpdate;
 
 public class PhosphorData {
 	public static final AtomicReference<Thread> CLIENT = new AtomicReference<>(null);
+	public static final AtomicReference<Thread> SERVER = new AtomicReference<>(null);
 	public static IProgressUpdate PROGRESS_SAVE_WORLDS = null;
 }

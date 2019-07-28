@@ -135,4 +135,9 @@ public abstract class MixinMinecraftServer {
         }
         return EMPTY_INT;
     }
+
+    @Inject(method = "startServerThread", at = @At("HEAD"))
+    private void onServerStart(Thread thread, CallbackInfo ci) throws IllegalAccessException {
+        PhosphorData.SERVER.set(thread);
+    }
 }
